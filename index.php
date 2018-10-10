@@ -1,39 +1,14 @@
-
 <?php
-//in class
 
-
-// Create and include a configuration file with the database connection
 include('config.php');
-// Get a list of books from the database
-$sql = file_get_contents('sql/getAllBooks.sql');
-$statement = $database->prepare($sql);
-$statement->execute();
+include('functions.php');
 
-$allBooks = $statement->fetchAll(PDO::FETCH_ASSOC);
+// Call the newly defined get function to find to get the search term
+$term = get('search-term');
 
-// Get a list of categories for each book from the database
-$sql = file_get_contents('sql/getBooksCategories.sql');
-$statement = $database->prepare($sql);
-$statement->execute();
+$books = searchBooks($term, $database);
 
-$booksCategories = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-// Create an associative array storing the categories of each book indexed by isbn
-$books = array();
-
-foreach($allBooks as $book) {
-	$books[$book['isbn']] = array(
-		'title' => $book['title'],
-		//also need Price
-		'categories' => array()
-	);
-}
-
-
-foreach($booksCategories as $bookCategory) {
-	$books[$bookCategory['isbn']]['categories'][] = $bookCategory['name'];
-}
+// For each book add links to view the book on book.php an d a link to edit the book.
 ?>
 
 <!doctype html>
@@ -54,24 +29,23 @@ foreach($booksCategories as $bookCategory) {
 <body>
 	<div class="page">
 		<h1>Books</h1>
-		<pre>
-			<?php print_r($books); ?>
-		</pre>
-		<?php // Loop over books printing the title, price and list the categories ?>
-		<?php foreach($books as $book) : ?>
-			<div class="book">
-				<h2>
-					<?php echo $book['title'] ?>
-				</h2>
-				<ul>
-					<?php foreach($book['categories'] as $category) : ?>
-						<li>
-							<?php echo category ?>
-						</li>
-					<?php endforeach ?>
-				</ul>
-			</div>
-		<?php endforeach ?>
+		<form method="GET">
+			<input type="text" name="search-term" placeholder="Search..." />
+			<input type="submit" />
+		</form>
+		<br>
+        <?php foreach($books as $book) : ?>
+			<p>
+				<?php echo $book['title']; ?><br />
+				<?php echo $book['author']; ?> <br />
+				<?php echo $book['price']; ?> <br />
+				<?php echo $book['isbn']; ?> <br />
+				<br>
+				<a href="book.php?isbn=<?php echo $book['isbn'] ?>">See book profile (book.php)</a><br />
+				<a href="form.php?isbn=<?php echo $book['isbn'] ?>&action=edit">Go to form to edit book info (form.php)</a><br />
+				<!-- For each book add links to view the book on book.php an d a link to edit the book.
+			</p>
+		<?php endforeach; ?>
 	</div>
 </body>
 </html>
